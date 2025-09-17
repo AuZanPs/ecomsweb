@@ -1,3 +1,156 @@
+# 🛍️ EcomsWeb — Full‑Stack E‑Commerce Platform (v1.0.0)
+A comprehensive, production‑ready e‑commerce platform built with React + TypeScript (frontend) and Express + TypeScript (backend) on MongoDB.
+## 🏗️ Architecture
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │    Database     │
+│   React + TS    │◄──►│  Express + TS   │◄──►│    MongoDB      │
+│                 │    │                 │    │                 │
+│ • React Router  │    │ • JWT Auth      │    │ • Indexed       │
+│ • Tailwind CSS  │    │ • Rate Limiting │    │   Collections   │
+│ • Context API   │    │ • Perf Timing   │    │ • Aggregations  │
+│ • Axios Client  │    │ • Error Handling│    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+Features include authentication, product catalog, cart, checkout, orders, and performance monitoring.
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd EcomsWeb
+# Start backend (Terminal 1)
+cd backend; npm install; npm run dev
+
+# Start frontend (Terminal 2)
+cd frontend; npm install; npm run dev
+
+# Frontend: http://localhost:5173
+# Backend health: http://localhost:3000/api/health
+```
+### 🔐 Authentication & User Management
+- User registration and login (JWT)
+- Password hashing with bcrypt
+- User profile (get/update)
+- Protected route middleware
+### 🛍️ Product Management
+- Product catalog with details
+- Search and filtering
+- Featured and top‑selling
+- Price range queries
+### 🛒 Shopping Cart
+- Authenticated user cart
+- Add/update/remove/clear items
+- Cart validation (stock/prices)
+### 💳 Checkout & Orders
+- Checkout validation and initiation
+- Confirm/cancel/express checkout
+- Order history and details
+- Order cancelation rules
+### 📊 Monitoring
+- Request timing analytics
+- Memory usage snapshot
+- Basic stats endpoint: `/api/stats`
+### 🔐 Security Features
+- Input validation with Zod
+- XSS protection
+```
+Frontend (React) ←→ REST API (Express) ←→ Database (MongoDB)
+```
+<!-- Screenshots section intentionally omitted for v1.0.0. Add real screenshots when deployed. -->
+## 🔒 Security & Compliance
+2. **Update Payment Flow**
+### 🔐 Current Security Features
+- ✅ JWT authentication with refresh tokens
+- ✅ Password hashing with bcrypt (12 rounds)
+- ✅ Multi-tier rate limiting protection
+- ✅ Input validation and sanitization
+- ✅ CORS and security headers
+- ✅ SQL injection prevention
+- ✅ XSS protection middleware
+- ✅ Request timing monitoring
+- ❌ **Payment data security (REQUIRES FIX)**
+## 🚀 Deployment
+This project can be deployed completely free using Vercel + MongoDB Atlas.
+### Local Development
+### Prerequisites
+- Node.js 18+
+- MongoDB (local or Atlas)
+### Installation
+1. **Clone the repository**
+```bash
+git clone https://github.com/yourusername/ecommerce-platform
+cd ecommerce-platform
+```
+2. **Backend Setup**
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your MongoDB URI and JWT secret
+npm run build
+npm start
+```
+3. **Frontend Setup**
+```bash
+cd ../frontend
+npm install
+cp .env.example .env
+# Edit .env with backend URL
+npm run dev
+```
+4. **Environment Variables**
+Backend `.env`:
+```
+MONGODB_URI=mongodb://127.0.0.1:27017/ecommerce
+JWT_SECRET=your-secret-key-here
+PORT=3000
+```
+Frontend `.env`:
+```
+VITE_API_BASE_URL=http://localhost:3000/api
+```
+## 🌐 Deployment Targets
+This project can be deployed on providers like Vercel (frontend) and Vercel/Railway/Render (backend). See env examples and docs.
+## 🔧 API Endpoints (as implemented)
+POST   /api/auth/refresh      # Refresh access token
+GET    /api/auth/profile      # Get user profile
+PUT    /api/auth/profile      # Update user profile
+POST   /api/auth/logout       # Logout (invalidate tokens)
+GET    /api/products/featured # Featured products
+GET    /api/products/top-selling # Top‑selling products
+GET    /api/products/price-range # Products within a price range
+DELETE /api/cart/:productId   # Remove item from cart
+DELETE /api/cart/clear        # Clear entire cart
+GET    /api/cart/validate     # Validate cart (stock, prices)
+GET    /api/orders/:orderId        # Get specific order details
+PUT    /api/orders/:orderId/cancel # Cancel an order
+GET    /api/orders/statistics # Order statistics
+GET    /api/orders/status/:status # List orders by status
+GET    /api/orders/tracking/:orderNumber # Track by order number
+POST   /api/webhooks/stripe   # Stripe webhook
+POST   /api/webhooks/paypal   # PayPal webhook
+GET    /api/webhooks/health   # Webhook health
+GET    /api/webhooks/summary  # Webhook event summary
+GET    /api/health            # System health check
+## 📊 Project Statistics
+- **Total Lines of Code**: see git history
+- **Tests**: Extensive unit, integration, and contract tests
+- **Rate Limiting**: Multi‑tier protection system
+### 🚀 Performance Features
+- **Code Splitting**: Planned (see docs/lighthouse-performance-analysis.md)
+### 🔄 Backend Optimizations
+### 🔍 Performance Dashboard
+## 🧪 Testing
+### 📊 Test Results Summary
+See docs/final-project-validation.md for current snapshot and quality metrics.
+## 🤝 Contributing
+### 🐛 Bug Reports
+### 🗺️ Roadmap
+## 📄 License
+This project is licensed under the **MIT License**.
+--- 
+<div align="center">
+Made with ❤️ using TypeScript, React, and MongoDB
+</div>
 # 🛍️ EcomsWeb - Full-Stack E-Commerce Platform
 
 A comprehensive, production-ready e-commerce platform built with## 🏗️ Architecture
