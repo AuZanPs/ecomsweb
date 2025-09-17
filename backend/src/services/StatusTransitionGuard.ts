@@ -1,6 +1,7 @@
-import { OrderStatus } from '../models/Order';
+import { OrderStatus, StatusUpdateContext } from '../models/Order';
 import Order from '../models/Order';
 import User from '../models/User';
+import Product from '../models/Product';
 
 // Interfaces for status transition validation
 export interface StatusTransitionRule {
@@ -92,8 +93,8 @@ export class StatusTransitionGuard {
   private static readonly TRANSITION_RULES: StatusTransitionRule[] = [
     // From Pending
     {
-      fromStatus: 'Pending',
-      toStatus: 'Paid',
+      fromStatus: OrderStatus.PENDING,
+      toStatus: OrderStatus.PAID,
       conditions: [
         {
           type: 'payment_status',
@@ -114,8 +115,8 @@ export class StatusTransitionGuard {
       ]
     },
     {
-      fromStatus: 'Pending',
-      toStatus: 'Cancelled',
+      fromStatus: OrderStatus.PENDING,
+      toStatus: OrderStatus.CANCELLED,
       conditions: [
         {
           type: 'time_based',
@@ -128,8 +129,8 @@ export class StatusTransitionGuard {
       ]
     },
     {
-      fromStatus: 'Pending',
-      toStatus: 'Failed',
+      fromStatus: OrderStatus.PENDING,
+      toStatus: OrderStatus.FAILED,
       conditions: [
         {
           type: 'payment_status',
@@ -144,8 +145,8 @@ export class StatusTransitionGuard {
     
     // From Paid
     {
-      fromStatus: 'Paid',
-      toStatus: 'Processing',
+      fromStatus: OrderStatus.PAID,
+      toStatus: OrderStatus.PROCESSING,
       conditions: [
         {
           type: 'stock_availability',
@@ -158,8 +159,8 @@ export class StatusTransitionGuard {
       ]
     },
     {
-      fromStatus: 'Paid',
-      toStatus: 'Cancelled',
+      fromStatus: OrderStatus.PAID,
+      toStatus: OrderStatus.CANCELLED,
       conditions: [
         {
           type: 'user_role',
@@ -176,8 +177,8 @@ export class StatusTransitionGuard {
     
     // From Processing
     {
-      fromStatus: 'Processing',
-      toStatus: 'Shipped',
+      fromStatus: OrderStatus.PROCESSING,
+      toStatus: OrderStatus.SHIPPED,
       conditions: [
         {
           type: 'custom',
@@ -190,8 +191,8 @@ export class StatusTransitionGuard {
       ]
     },
     {
-      fromStatus: 'Processing',
-      toStatus: 'Cancelled',
+      fromStatus: OrderStatus.PROCESSING,
+      toStatus: OrderStatus.CANCELLED,
       conditions: [
         {
           type: 'user_role',
@@ -208,29 +209,29 @@ export class StatusTransitionGuard {
     
     // From Shipped
     {
-      fromStatus: 'Shipped',
-      toStatus: 'Delivered',
+      fromStatus: OrderStatus.SHIPPED,
+      toStatus: OrderStatus.DELIVERED,
       conditions: [
         {
           type: 'time_based',
           description: 'Must be at least 1 day since shipped',
           validator: async (context) => {
-            return await StatusTransitionGuard.validateMinimumTimeSince(context.orderId, 'Shipped', 24 * 60);
+            return await StatusTransitionGuard.validateMinimumTimeSince(context.orderId, OrderStatus.SHIPPED, 24 * 60);
           },
           errorMessage: 'Order can only be marked as delivered at least 1 day after shipping'
         }
       ],
       automaticRevert: {
         afterMinutes: 7 * 24 * 60, // 7 days
-        revertToStatus: 'Delivered',
+        revertToStatus: OrderStatus.DELIVERED,
         reason: 'Automatic delivery confirmation after 7 days'
       }
     },
     
     // From Failed
     {
-      fromStatus: 'Failed',
-      toStatus: 'Pending',
+      fromStatus: OrderStatus.FAILED,
+      toStatus: OrderStatus.PENDING,
       conditions: [
         {
           type: 'custom',
@@ -538,7 +539,7 @@ export class StatusTransitionGuard {
       // Check if payment events show successful payment
       // This would integrate with PaymentWebhookHandler in real implementation
       const order = await Order.findById(orderId);
-      return order?.status === 'Paid' || false;
+      return order?.status === OrderStatus.PAID || false;
     } catch (error) {
       return false;
     }
@@ -700,7 +701,7 @@ export class StatusTransitionGuard {
       
       return order.statusHistory.map((entry, index) => ({
         orderId,
-        fromStatus: index > 0 ? order.statusHistory[index - 1].status : 'Pending',
+        fromStatus: index > 0 ? order.statusHistory[index - 1].status : OrderStatus.PENDING,
         toStatus: entry.status,
         reason: entry.reason,
         approved: true,
@@ -732,7 +733,7 @@ export class StatusTransitionGuard {
         try {
           const order = await Order.findById(orderId);
           if (order && order.status !== revertToStatus) {
-            await order.updateStatus(revertToStatus, reason);
+            await order.updateStatus(revertToStatus, { reason });
             await this.logStatusTransition(orderId, order.status, revertToStatus, undefined, reason);
           }
         } catch (error) {
