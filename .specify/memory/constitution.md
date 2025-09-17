@@ -1,50 +1,64 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+## **Project Vision Statement**
+Deliver a reliable, secure, and user‑friendly e‑commerce website that enables customers to seamlessly discover products, add them to a cart, complete secure payments, and track orders end‑to‑end—while showcasing full‑stack proficiency across authentication, data modeling, API design, payment integration, and scalable architecture suitable as a portfolio centerpiece for real‑world commerce scenarios.
 
-## Core Principles
+## **Core User Personas**
+- **Customer / Registered User**: Browses and searches products, views product details (images, pricing, availability), manages a personal shopping cart, completes secure checkout, pays via integrated gateway, tracks order status, and submits product reviews after delivery.
+- **Site Administrator**: Oversees platform health and data integrity, manages order status life cycle, and monitors user activity and product catalog quality (implicit stewardship required for accurate listings and fulfillment coordination).
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+## **Core Modules & Minimum Viable Features (MVF)**
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### **Module 1: User Authentication** (User login and authentication)
+- User registration with required fields: name, email, password.
+- Enforce unique email constraint; reject duplicates with clear error.
+- Passwords stored using a secure hashing algorithm (e.g., bcrypt) — never plain text.
+- Login with email + password returns a signed JWT auth token.
+- Protected API routes require valid JWT (authorization middleware).
+- Logout accomplished client‑side by removing stored token; server validates token signature only (stateless sessions).
+- Basic profile endpoint returns authenticated user’s id, name, and email.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### **Module 2: Product Catalog** (Product search and listing with details, images, pricing)
+- Public product listing endpoint with pagination (page number & page size params).
+- Search capability by product name (case‑insensitive substring match).
+- Each product exposes: id, name, description, price, primary image URL, stock status (in/out of stock).
+- Product detail endpoint returns full product record for a given id.
+- Results ordered by creation date descending by default.
+- Graceful handling when no products match (empty list, not error).
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### **Module 3: Shopping Cart** (Shopping cart functionality to add/remove items)
+- Authenticated user maintains a single active cart stored in database.
+- Add product to cart with specified quantity (default 1); validate product exists and is in stock.
+- Update line item quantity (must remain > 0) or remove item entirely.
+- Prevent adding quantity exceeding available stock at time of action.
+- Retrieve cart endpoint returns item list with: product id, name, unit price, quantity, line subtotal, and overall subtotal.
+- Cart automatically recalculates subtotal server‑side (no client trust).
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### **Module 4: Secure Checkout & Payments** (Secure payment gateway integration)
+- Checkout endpoint validates cart is not empty and all items still in stock.
+- Collect shipping and billing contact fields (minimal: full name, address, city, postal code, country, email).
+- Calculate order total (sum of line items) plus placeholder tax/shipping logic (flat values in MVP).
+- Create payment intent/session via selected gateway (Stripe or PayPal) and return client secret / approval URL.
+- Store only gateway transaction/reference id—never raw card data.
+- Mark provisional order state as “Payment Pending” until gateway confirmation.
+- On successful gateway confirmation, transition order to “Paid.”
+- On failure/cancellation, expose clear status and allow retry without duplicating order records.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### **Module 5: Order Management** (Order tracking and review system)
+- Create order record from paid cart capturing: user id, items (product id, quantity, unit price), totals, status timeline.
+- Supported statuses: Payment Pending → Paid → Shipped → Delivered (→ Cancelled when applicable).
+- Customer can view list of their orders with summary (id, date, total, current status).
+- Order detail endpoint shows full line items, current status, and minimal history (at least created + latest status timestamp).
+- Customer can submit a product review (rating + short text) only after order status = Delivered and only for purchased items.
+- Administrator can update order status (e.g., Paid → Shipped → Delivered or Paid → Cancelled) with validation of allowed transitions.
+- Order listing for admin supports filtering by status.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+## **Mandated Technology Stack**
+- **Frontend: ReactJS or Angular** — Provides a dynamic, component‑based interface for product browsing, cart interactions, and responsive user experience.
+- **Backend: Node.js with Express.js** — Implements RESTful APIs for authentication, product data access, cart operations, checkout orchestration, and order life cycle management.
+- **Database: MongoDB** — Stores users, products, carts, and orders with flexible document schemas supporting rapid iteration and scaling.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## **Key Non-Functional Requirements (NFRs)**
+- **Security**: Enforce hashed credentials, JWT-based stateless auth, least-privilege data access, and secure payment processing by delegating sensitive card handling to the gateway; all sensitive operations must assume transport over HTTPS.
+- **Performance**: Implement paginated product queries, minimize payload sizes, and ensure fast client interactions through efficient API responses (<~300ms target for core reads under normal load) and cached static assets.
+- **Scalability**: Design stateless backend services allowing horizontal scaling; leverage MongoDB indexing on frequently queried fields (e.g., product name) and modular API boundaries to support future feature expansion.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
-
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
-
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-09-16 | **Last Amended**: 2025-09-16
