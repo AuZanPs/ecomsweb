@@ -38,7 +38,6 @@ npm run dev
 ```bash
 # Database
 MONGODB_URI=mongodb://127.0.0.1:27017/ecommerce
-# OR MongoDB Atlas: mongodb+srv://user:pass@cluster.mongodb.net/ecommerce
 
 # Authentication
 JWT_SECRET=your-super-secure-jwt-secret-minimum-32-characters
