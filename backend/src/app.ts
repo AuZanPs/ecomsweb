@@ -6,6 +6,7 @@ import { connectMongo } from './api/bootstrap/mongo';
 import { requestLogger } from './api/middleware/logging';
 import { securityMiddleware } from './api/middleware/security';
 import { errorHandler } from './api/middleware/errorHandler';
+import { inputSanitizationMiddleware, requestSizeValidation } from './api/middleware/inputSanitization';
 import { performanceTiming, performanceStatsHandler } from './api/middleware/timing';
 import { 
   globalRateLimit, 
@@ -39,11 +40,16 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Request size validation (before body parsing)
+app.use(requestSizeValidation);
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Apply security and logging middleware
 app.use(securityMiddleware);
+app.use(inputSanitizationMiddleware);
 app.use(performanceTiming);
 app.use(requestLogger);
 
