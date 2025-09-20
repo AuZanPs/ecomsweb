@@ -419,7 +419,7 @@ describe('Middleware and Utilities Unit Tests', () => {
       const duplicateError = {
         name: 'MongoServerError',
         message: 'Duplicate key error',
-        code: 11000,
+        code: '11000',
         keyPattern: { email: 1 }
       };
 
