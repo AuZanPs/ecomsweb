@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Create axios instance with base configuration
-const baseURL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL,

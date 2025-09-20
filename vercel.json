@@ -25,5 +25,10 @@
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "backend/api/index.ts": {
+      "maxDuration": 30
+    }
   }
 }

@@ -48,11 +48,7 @@ connectMongo().then(() => {
 
 // Global middleware - order is important for performance
 app.use(compressionMiddleware);
-// Note: helmet is configured in securityMiddleware with proper CSP for e-commerce
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true
-}));
+// Note: helmet and CORS are configured in securityMiddleware with proper CSP for e-commerce
 
 // Performance and memory optimization
 app.use(cacheControlMiddleware);
