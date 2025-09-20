@@ -9,6 +9,15 @@ import { errorHandler } from './api/middleware/errorHandler';
 import { inputSanitizationMiddleware, requestSizeValidation } from './api/middleware/inputSanitization';
 import { performanceTiming, performanceStatsHandler } from './api/middleware/timing';
 import { 
+  compressionMiddleware,
+  cacheControlMiddleware,
+  performanceMonitoringMiddleware,
+  memoryOptimizationMiddleware,
+  dbQueryOptimizationMiddleware,
+  getPerformanceMetrics
+} from './api/middleware/performance';
+import { optimizeDatabaseConnection, getDatabasePerformanceMetrics, getCacheStats } from './services/DatabaseOptimization';
+import { 
   globalRateLimit, 
   authRateLimit, 
   apiRateLimit, 
@@ -31,15 +40,25 @@ dotenv.config();
 
 const app = express();
 
-// Initialize MongoDB connection (for serverless, this happens on each cold start)
-connectMongo().catch(console.error);
+// Initialize MongoDB connection with optimizations
+connectMongo().then(() => {
+  optimizeDatabaseConnection();
+  console.log('[PERFORMANCE] Database optimizations initialized');
+}).catch(console.error);
 
-// Global middleware
+// Global middleware - order is important for performance
+app.use(compressionMiddleware);
 app.use(helmet());
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true
 }));
+
+// Performance and memory optimization
+app.use(cacheControlMiddleware);
+app.use(performanceMonitoringMiddleware);
+app.use(memoryOptimizationMiddleware);
+app.use(dbQueryOptimizationMiddleware);
 
 // Request size validation (before body parsing)
 app.use(requestSizeValidation);
@@ -67,6 +86,39 @@ app.get('/api/health', (req, res) => {
 
 // Performance statistics endpoint
 app.get('/api/stats', performanceStatsHandler);
+
+// Enhanced performance metrics endpoint
+app.get('/api/performance', async (req, res) => {
+  try {
+    const performanceMetrics = getPerformanceMetrics();
+    const dbMetrics = await getDatabasePerformanceMetrics();
+    const cacheStats = getCacheStats();
+    
+    res.json({
+      success: true,
+      data: {
+        server: performanceMetrics,
+        database: dbMetrics,
+        cache: cacheStats,
+        serverInfo: {
+          uptime: process.uptime(),
+          nodeVersion: process.version,
+          platform: process.platform,
+          arch: process.arch,
+          pid: process.pid,
+          environment: process.env.NODE_ENV || 'development'
+        }
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve performance metrics',
+      error: error.message
+    });
+  }
+});
 
 // API routes with specific rate limiting
 app.use('/api/auth', authRateLimit, authRoutes);
