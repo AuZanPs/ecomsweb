@@ -89,6 +89,7 @@ export const api = {
     validate: () => apiClient.get('/checkout/validate'),
     initiate: (data: any) => apiClient.post('/checkout/initiate', data),
     confirm: (data: any) => apiClient.post('/checkout/confirm', data),
+    createPaymentIntent: (data: any) => apiClient.post('/checkout/create-payment-intent', data),
     calculateTotal: (shippingAddress: any) =>
       apiClient.post('/checkout/calculate-total', { shippingAddress }),
     cancel: (orderId: string, reason: string) =>

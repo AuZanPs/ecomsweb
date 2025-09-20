@@ -274,7 +274,8 @@ export const CheckoutInitiateSchema = z.object({
 
 export const CheckoutConfirmSchema = z.object({
   paymentIntentId: z.string().min(1, 'Payment intent ID is required').trim(),
-  paymentMethodId: z.string().min(1, 'Payment method ID is required').trim().optional()
+  paymentMethodId: z.string().min(1, 'Payment method ID is required').trim(),
+  shippingAddress: ShippingAddressSchema.optional()
 });
 
 // ============================================================================

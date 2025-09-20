@@ -39,6 +39,9 @@ export interface IOrder extends Document {
   taxCents: number;
   paymentRef: string | null;
   paymentIntentId?: string;
+  paymentMethodId?: string;
+  paymentStatus?: 'pending' | 'succeeded' | 'failed' | 'canceled';
+  paymentMethod?: 'stripe' | 'paypal' | 'card' | 'bank_transfer';
   shippingAddress?: {
     street: string;
     city: string;
@@ -375,6 +378,20 @@ const orderSchema = new Schema<IOrder>({
     trim: true,
     sparse: true, // Allow multiple null values but unique non-null values
     index: true
+  },
+  paymentMethodId: {
+    type: String,
+    trim: true
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'succeeded', 'failed', 'canceled'],
+    default: 'pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['stripe', 'paypal', 'card', 'bank_transfer'],
+    default: 'stripe'
   },
   trackingNumber: {
     type: String,

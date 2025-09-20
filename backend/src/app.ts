@@ -23,6 +23,7 @@ import cartRoutes from './api/routes/cartRoutes';
 import checkoutRoutes from './api/routes/checkoutRoute';
 import orderRoutes from './api/routes/orderRoutes';
 import paymentWebhookRoutes from './api/routes/paymentWebhookRoute';
+import stripeWebhookRoutes from './api/routes/webhookRoute';
 
 // Load environment variables
 dotenv.config();
@@ -68,6 +69,7 @@ app.use('/api/cart', cartRateLimit, cartRoutes);
 app.use('/api/checkout', apiRateLimit, checkoutRoutes);
 app.use('/api/orders', apiRateLimit, orderRoutes);
 app.use('/api/webhooks', webhookRateLimit, paymentWebhookRoutes);
+app.use('/api/webhooks', webhookRateLimit, stripeWebhookRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

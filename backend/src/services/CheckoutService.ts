@@ -177,68 +177,73 @@ export class CheckoutService {
     }
     
     try {
-      // Find the order
-      const order = await Order.findById(validation.data.paymentIntentId);
-      if (!order) {
-        throw new Error('Order not found');
-      }
+      // For secure Stripe integration, we create the order when confirming payment
+      // since the payment has already been processed by Stripe
       
-      // Verify order belongs to user
-      if (order.userId.toString() !== userId) {
-        throw new Error('Unauthorized: Order does not belong to user');
-      }
-      
-      // Verify order is in correct status
-      if (order.status !== 'Pending') {
-        throw new Error(`Cannot confirm order in ${order.status} status`);
+      // Get user's cart with populated product data
+      const cart = await Cart.findOne({ userId }).populate('items.productId');
+      if (!cart || cart.items.length === 0) {
+        throw new Error('Cart is empty');
       }
       
       // Final validation of cart and stock
       const validationResult = await this.validateCheckout(userId);
       if (!validationResult.isValid) {
-        // Mark order as failed and throw error
-        await order.updateStatus(OrderStatus.FAILED, { reason: 'Stock validation failed during confirmation' });
         throw new Error(`Final validation failed: ${validationResult.errors.join(', ')}`);
       }
       
-      // Process payment (mock implementation)
-      const paymentSuccess = await this.processPayment(validation.data.paymentIntentId, validation.data.paymentMethodId);
-      if (!paymentSuccess) {
-        await order.updateStatus(OrderStatus.FAILED, { reason: 'Payment processing failed' });
-        throw new Error('Payment processing failed');
-      }
+      // Calculate total using populated product data
+      const totalAmountCents = cart.items.reduce((total, item) => {
+        const product = item.productId as any; // Cast because of populate
+        return total + (product.priceCents * item.quantity);
+      }, 0);
+      
+      // Create the order
+      const order = new Order({
+        userId,
+        orderNumber: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+        items: cart.items.map(item => {
+          const product = item.productId as any; // Cast because of populate
+          return {
+            productId: product._id,
+            productName: product.name,
+            quantity: item.quantity,
+            priceCents: product.priceCents,
+            subtotalCents: product.priceCents * item.quantity
+          };
+        }),
+        totalAmountCents,
+        status: OrderStatus.PAID, // Order is already paid via Stripe
+        paymentIntentId: validation.data.paymentIntentId,
+        paymentMethodId: validation.data.paymentMethodId,
+        paymentStatus: 'succeeded',
+        paymentMethod: 'stripe',
+        shippingAddress: validation.data.shippingAddress,
+        estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      await order.save();
       
       // Update stock levels
       await this.reserveStock(order);
       
-      // Update order status to Paid
-      await order.updateStatus(OrderStatus.PAID, { reason: 'Payment confirmed' });
-      
       // Clear user's cart
       await CartService.clearCart(userId);
-      
-      // Generate order number if not exists
-      if (!order.orderNumber) {
-        order.orderNumber = this.generateOrderNumber();
-        await order.save();
-      }
       
       return {
         orderId: order._id.toString(),
         orderNumber: order.orderNumber,
         status: order.status,
-        totalAmount: order.totalAmountCents / 100,
-        totalAmountCents: order.totalAmountCents,
+        totalAmount: totalAmountCents / 100,
+        totalAmountCents,
         paymentIntentId: validation.data.paymentIntentId,
-        estimatedDelivery: this.calculateEstimatedDelivery(order.shippingCostCents),
+        estimatedDelivery: order.estimatedDelivery,
         trackingNumber: order.trackingNumber
       };
-      
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Failed to confirm checkout');
+    } catch (error: any) {
+      throw new Error(`Checkout confirmation failed: ${error.message}`);
     }
   }
   

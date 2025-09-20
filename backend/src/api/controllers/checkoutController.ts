@@ -1,8 +1,40 @@
 import { Request, Response } from 'express';
 import { CheckoutService } from '../../services/CheckoutService';
 import { AuthRequest } from '../middleware/auth';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_51234567890abcdef', {
+  apiVersion: '2025-08-27.basil',
+});
 
 export class CheckoutController {
+  createPaymentIntent = async (req: AuthRequest, res: Response): Promise<Response> => {
+    try {
+      const userId = req.user._id;
+      const { amount, currency = 'usd', metadata } = req.body;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency,
+        metadata: {
+          userId: userId.toString(),
+          ...metadata
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+
+      return res.json({
+        success: true,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      });
+    } catch (error: any) {
+      return res.status(400).json({ message: error.message });
+    }
+  };
+
   validateCheckout = async (req: AuthRequest, res: Response): Promise<Response> => {
     try {
       const userId = req.user._id;

@@ -11,6 +11,7 @@ const checkoutController = new CheckoutController();
 router.use(authenticateJWT);
 
 router.get('/validate', checkoutController.validateCheckout);
+router.post('/create-payment-intent', checkoutController.createPaymentIntent);
 router.post('/initiate', validate(CheckoutInitiateSchema), checkoutController.initiateCheckout);
 router.post('/confirm', validate(CheckoutConfirmSchema), checkoutController.confirmCheckout);
 router.post('/calculate-total', checkoutController.calculateOrderTotal);
