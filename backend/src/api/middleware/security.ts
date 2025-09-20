@@ -5,13 +5,14 @@ import { RequestHandler } from 'express';
 /**
  * Enhanced Security Middleware Configuration
  * Implements comprehensive security headers and CORS policies
- * for production-grade security posture
+ * for production-grade security posture with e-commerce support
  */
 export const securityMiddleware: RequestHandler[] = [
   // Enhanced Helmet configuration with e-commerce-optimized CSP
   helmet({
     // Content Security Policy - secure but functional for e-commerce with Stripe
     contentSecurityPolicy: {
+      useDefaults: false, // Explicitly override any platform defaults
       directives: {
         // Default fallback - allow self and basic resources
         defaultSrc: ["'self'"],
@@ -20,6 +21,7 @@ export const securityMiddleware: RequestHandler[] = [
         scriptSrc: [
           "'self'",
           "'unsafe-inline'", // Required for Vite HMR and React development
+          "'unsafe-eval'", // Sometimes needed for React dev tools
           "https://js.stripe.com", // Stripe Elements SDK
           "https://checkout.stripe.com", // Stripe Checkout
         ],
@@ -119,19 +121,29 @@ export const securityMiddleware: RequestHandler[] = [
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
   }),
 
-  // Enhanced CORS configuration with environment-based origins
+  // Enhanced CORS configuration with environment-based origins and debugging
   cors({
     origin: function (origin, callback) {
+      // Debug logging for CORS issues
+      console.log(`[CORS] Request from origin: ${origin}`);
+      
       // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log('[CORS] Allowing request with no origin');
+        return callback(null, true);
+      }
       
       const allowedOrigins = process.env.CORS_ORIGINS 
         ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
         : ['http://localhost:3000', 'http://localhost:5173'];
       
+      console.log(`[CORS] Allowed origins: ${allowedOrigins.join(', ')}`);
+      
       if (allowedOrigins.includes(origin)) {
+        console.log(`[CORS] Origin ${origin} allowed`);
         callback(null, true);
       } else {
+        console.log(`[CORS] Origin ${origin} BLOCKED - not in allowed list`);
         callback(new Error(`Origin ${origin} not allowed by CORS policy`));
       }
     },
